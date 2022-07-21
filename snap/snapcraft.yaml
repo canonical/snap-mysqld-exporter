@@ -13,7 +13,7 @@ confinement: strict
 
 apps:
   mysqld-exporter:
-    command: bin/mysqld_exporter
+    command: 'bin/prometheus_mysqld_exporter.wrapper'
     daemon: simple
     plugs:
       - network
@@ -28,3 +28,17 @@ parts:
     override-pull: |
       snapcraftctl pull
       snapcraftctl set-version "$(git describe)"
+  mycnf:
+    source: .
+    plugin: dump
+    organize:
+      my.cnf: etc/prometheus/my.cnf
+    prime:
+      - etc/prometheus/my.cnf
+  snap-wrapper:
+    source: .
+    plugin: dump
+    organize:
+      wrappers/mysqld-exporter-wrapper: bin/prometheus_mysqld_exporter.wrapper
+    prime:
+      - bin/prometheus_mysqld_exporter.wrapper

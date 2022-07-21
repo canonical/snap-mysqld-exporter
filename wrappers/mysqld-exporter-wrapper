@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Fail if these varts are not present (e.g. from direct wrapper runs)
+${SNAP?} ${SNAP_DATA?}
+
+cp -pn $SNAP/etc/prometheus/my.cnf $SNAP_DATA/my.cnf
+
+exec $SNAP/bin/mysqld_exporter --config.my-cnf=$SNAP_DATA/my.cnf

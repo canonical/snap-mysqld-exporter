@@ -1,0 +1,90 @@
+#!/bin/sh
+
+DEFAULT_MYSQL_USER="exporter"
+DEFAULT_MYSQL_PWD="exporterpwd"
+DEFAULT_MYSQL_PORT="3306"
+DEFAULT_MYSQL_HOST="localhost"
+
+
+# mysql.port
+mysql_port()
+{
+    port="$(snapctl get mysql.port)"
+    if [ -z "$port"]; then
+        port="$DEFAULT_MYSQL_PORT"
+        set_mysql_port $port
+    fi
+    echo "$port"
+}
+
+set_mysql_port()
+{
+    snapctl set mysql.port="$1"
+}
+
+# mysql.host
+mysql_host()
+{
+    host="$(snapctl get mysql.host)"
+    if [ -z "$host"]; then
+        host="$DEFAULT_MYSQL_HOST"
+        set_mysql_host $host
+    fi
+    echo "$host"
+}
+
+set_mysql_host()
+{
+    snapctl set mysql.host="$1"
+}
+
+# mysql.user
+mysql_user()
+{
+    user="$(snapctl get mysql.user)"
+    if [ -z "$user"]; then
+        user="$DEFAULT_MYSQL_USER"
+        set_mysql_user $user
+    fi
+    echo "$user"
+}
+
+set_mysql_user()
+{
+    snapctl set mysql.user="$1"
+}
+
+
+# mysql.pwd
+mysql_pwd()
+{
+    pwd="$(snapctl get mysql.pwd)"
+    if [ -z "$pwd"]; then
+        pwd="$DEFAULT_MYSQL_PWD"
+        set_mysql_pwd $pwd
+    fi
+    echo "$pwd"
+}
+
+set_mysql_pwd()
+{
+    snapctl set mysql.pwd="$1"
+}
+
+
+# common
+restart()
+{
+    snapctl restart mysql-prometheus-exporter.mysqld-exporter
+}
+
+generate_mycnf()
+{
+    cp -p $SNAP/etc/prometheus/my.cnf $SNAP_DATA/my.cnf
+
+    sed -i "s/MYSQL_USER/${PROM_MYSQL_EXPORTER_MYSQL_USER}/" $SNAP_DATA/my.cnf
+    sed -i "s/MYSQL_PWD/${PROM_MYSQL_EXPORTER_MYSQL_PWD}/" $SNAP_DATA/my.cnf
+    sed -i "s/MYSQL_HOST/${PROM_MYSQL_EXPORTER_MYSQL_HOST}/" $SNAP_DATA/my.cnf
+    sed -i "s/MYSQL_PORT/${PROM_MYSQL_EXPORTER_MYSQL_PORT}/" $SNAP_DATA/my.cnf
+}
+

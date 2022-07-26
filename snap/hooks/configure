@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# source the management script
+. "$SNAP/bin/management"
+
+# port
+handle_mysql_port_config()
+{
+    port="$(mysql_port)"
+
+    # Validate HTTP port
+    if ! expr "$port" : '^[0-9]\+$' > /dev/null; then
+        echo "\"$port\" is not a valid HTTP port" >&2
+        return 1
+    fi
+}
+handle_mysql_port_config
+
+# host
+handle_mysql_host_config()
+{
+    host="$(mysql_host)"
+}
+handle_mysql_host_config
+
+# user
+handle_mysql_user_config()
+{
+    user="$(mysql_user)"
+}
+handle_mysql_user_config
+
+# pwd
+handle_mysql_pwd_config()
+{
+    new_pwd="$(mysql_pwd)"
+}
+handle_mysql_pwd_config
+
+restart

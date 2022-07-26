@@ -6,11 +6,6 @@ ${SNAP?} ${SNAP_DATA?}
 # source the management script
 . "$SNAP/bin/management"
 
-PROM_MYSQL_EXPORTER_MYSQL_USER="$(mysql_user)"
-PROM_MYSQL_EXPORTER_MYSQL_PWD="$(mysql_pwd)"
-PROM_MYSQL_EXPORTER_MYSQL_HOST="$(mysql_host)"
-PROM_MYSQL_EXPORTER_MYSQL_PORT="$(mysql_port)"
-
 generate_mycnf
 
 exec $SNAP/bin/mysqld_exporter --config.my-cnf=$SNAP_DATA/my.cnf

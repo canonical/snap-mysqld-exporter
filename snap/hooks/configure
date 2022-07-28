@@ -35,6 +35,5 @@ handle_mysql_password_config()
 {
     new_password="$(mysql_password)"
 }
-handle_mysql_password_config
 
-restart
+handle_mysql_password_config

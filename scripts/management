@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DEFAULT_MYSQL_USER="exporter"
-DEFAULT_MYSQL_PWD="exporterpwd"
+DEFAULT_MYSQL_PASSWORD="exporterpasswd"
 DEFAULT_MYSQL_PORT="3306"
 DEFAULT_MYSQL_HOST="localhost"
 
@@ -55,27 +55,27 @@ set_mysql_user()
 }
 
 
-# mysql.pwd
-mysql_pwd()
+# mysql.password
+mysql_password()
 {
-    new_pwd="$(snapctl get mysql.pwd)"
-    if [ -z "$new_pwd"]; then
-        new_pwd="$DEFAULT_MYSQL_PWD"
-        set_mysql_pwd $new_pwd
+    new_password="$(snapctl get mysql.password)"
+    if [ -z "$new_password"]; then
+        new_password="$DEFAULT_MYSQL_PASSWORD"
+        set_mysql_passwordd $new_password
     fi
-    echo "$new_pwd"
+    echo "$new_password"
 }
 
-set_mysql_pwd()
+set_mysql_password()
 {
-    snapctl set mysql.pwd="$1"
+    snapctl set mysql.password="$1"
 }
 
 
 # common
 restart()
 {
-    snapctl restart mysql-prometheus-exporter.mysqld-exporter
+    snapctl restart mysqld-exporter.mysqld-exporter
 }
 
 generate_mycnf()
@@ -83,12 +83,12 @@ generate_mycnf()
     cp -p $SNAP/etc/prometheus/my.cnf $SNAP_DATA/my.cnf
 
     PROM_MYSQL_EXPORTER_MYSQL_USER="$(mysql_user)"
-    PROM_MYSQL_EXPORTER_MYSQL_PWD="$(mysql_pwd)"
+    PROM_MYSQL_EXPORTER_MYSQL_PASSWORD="$(mysql_password)"
     PROM_MYSQL_EXPORTER_MYSQL_HOST="$(mysql_host)"
     PROM_MYSQL_EXPORTER_MYSQL_PORT="$(mysql_port)"
 
     sed -i "s/MYSQL_USER/${PROM_MYSQL_EXPORTER_MYSQL_USER}/" $SNAP_DATA/my.cnf
-    sed -i "s/MYSQL_PWD/${PROM_MYSQL_EXPORTER_MYSQL_PWD}/" $SNAP_DATA/my.cnf
+    sed -i "s/MYSQL_PASSWORD/${PROM_MYSQL_EXPORTER_MYSQL_PASSWORD}/" $SNAP_DATA/my.cnf
     sed -i "s/MYSQL_HOST/${PROM_MYSQL_EXPORTER_MYSQL_HOST}/" $SNAP_DATA/my.cnf
     sed -i "s/MYSQL_PORT/${PROM_MYSQL_EXPORTER_MYSQL_PORT}/" $SNAP_DATA/my.cnf
 }

@@ -30,11 +30,11 @@ handle_mysql_user_config()
 }
 handle_mysql_user_config
 
-# pwd
-handle_mysql_pwd_config()
+# password
+handle_mysql_password_config()
 {
-    new_pwd="$(mysql_pwd)"
+    new_password="$(mysql_password)"
 }
-handle_mysql_pwd_config
+handle_mysql_password_config
 
 restart

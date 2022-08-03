@@ -1,19 +1,17 @@
-name: mysql-prometheus-exporter # you probably want to 'snapcraft register <name>'
-base: core20 # the base snap is the execution environment for this snap
+name: mysqld-exporter
+base: core22
 adopt-info: mysqld-exporter
 summary: The mysqld prometheus exporter from the Prometheus community
 description: |
-  This is my-snap's description. You have a paragraph or two to tell the
-  most important story about your snap. Keep it under 100 words though,
-  we live in tweetspace and your description wants to look good in the snap
-  store.
+  Provides the mysqld prometheus exporter from the Prometheus community as
+  a snap for collecting metrics from a mysql server instance.
 
 grade: devel
 confinement: strict
 
 apps:
   mysqld-exporter:
-    command: 'bin/prometheus-mysqld-exporter.wrapper'
+    command: 'bin/mysqld-exporter.wrapper'
     daemon: simple
     plugs:
       - network
@@ -22,12 +20,15 @@ apps:
 parts:
   mysqld-exporter:
     plugin: go
+    build-snaps:
+      - go
     source-type: git
     source: https://github.com/prometheus/mysqld_exporter.git
     source-tag: "v0.14.0"
     override-pull: |
       snapcraftctl pull
       snapcraftctl set-version "$(git describe)"
+
   mycnf:
     source: .
     plugin: dump
@@ -35,11 +36,13 @@ parts:
       my.cnf: etc/prometheus/my.cnf
     prime:
       - etc/prometheus/my.cnf
+
   wrappers:
     source: .
     plugin: dump
     organize:
       wrappers/: bin/
+
   scripts:
     source: .
     plugin: dump

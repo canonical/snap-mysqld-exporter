@@ -48,6 +48,7 @@ jobs:
         run: |
           echo "Configuring mysqld-exporter to use the proper user/pass"
           sudo snap set mysqld-exporter mysql.user=testuser mysql.password=secret
+          sudo snap restart mysqld-exporter
 
       # Check that metrics are exported. This is done with a very basic check of seeing if the
       # mysql_up metric is indeed 1.

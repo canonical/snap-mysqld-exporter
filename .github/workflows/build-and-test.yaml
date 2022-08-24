@@ -1,0 +1,107 @@
+name: Build/Test
+
+on:
+  workflow_call:
+    outputs:
+      snap:
+        description: "Filename of the built snap artifact"
+        value: local-${{ jobs.build.outputs.snap }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: python3 -m pip install tox
+      - name: Run linters
+        run: tox -e lint
+
+  unit-test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: python -m pip install tox
+      - name: Run tests
+        run: tox -e unit
+
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      snap: ${{ steps.snapcraft.outputs.snap }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build snap locally
+        uses: snapcore/action-build@v1
+        id: snapcraft
+
+      - name: Upload locally built snap artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: local-${{ steps.snapcraft.outputs.snap }}
+          path: ${{ steps.snapcraft.outputs.snap }}
+
+  function-test:
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    services:
+      mysql:
+        image: ubuntu/mysql
+        env:
+          MYSQL_DATABASE: db_test
+          MYSQL_ROOT_PASSWORD: passw0rd
+          MYSQL_USER: testuser
+          MYSQL_PASSWORD: secret
+        ports:
+          - 3306:3306
+
+    steps:
+      - name: Fetch built snap
+        uses: actions/download-artifact@v3
+        with:
+          name: local-${{ needs.build.outputs.snap }}
+
+      - name: Install snap and try itout
+        run: |
+          sudo snap install --dangerous ${{ needs.build.outputs.snap }}
+          sudo systemctl status snap.mysqld-exporter.mysqld-exporter
+          status=$?
+
+      - name: Setup mysql
+        run: |
+          mysql --host 127.0.0.1 --port 3306 -uroot -ppassw0rd \
+            -e "CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'secret' WITH MAX_USER_CONNECTIONS 3;"
+          mysql --host 127.0.0.1 --port 3306 -uroot -ppassw0rd \
+            -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'testuser'@'localhost';"
+
+      # Configure the snap services to use the proper mysql username and password
+      - name: Configure snap services
+        run: |
+          echo "Configuring mysqld-exporter to use the proper user/pass"
+          sudo snap set mysqld-exporter mysql.user=testuser mysql.password=secret
+          sudo snap restart mysqld-exporter
+
+      # Check that metrics are exported. This is done with a very basic check of seeing if the
+      # mysql_up metric is indeed 1.
+      - name: Check metrics exported
+        run: |
+          CURL_OPTS=(--max-time 20 --retry 5 --retry-delay 3 --retry-connrefused -s)
+          UP=$(curl ${CURL_OPTS[@]} http://localhost:9104/metrics | awk '/^mysql_up/ { print $2 }')
+          if [ "$UP" == "1" ]
+          then
+              echo "Metric check succeeded."
+          else
+              echo "Metric check failed. UP = '$UP'"
+              sudo snap logs mysqld-exporter
+              cat /var/snap/mysqld-exporter/current/my.cnf
+              sudo snap get mysqld-exporter mysql
+              exit 1
+          fi

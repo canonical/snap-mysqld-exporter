@@ -1,68 +1,36 @@
-name: Pull Request
-
+name: Commits
 on:
-  pull_request:
-    branches:
-      - main
+  - pull_request
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: ubuntu/mysql
-        env:
-          MYSQL_DATABASE: db_test
-          MYSQL_ROOT_PASSWORD: passw0rd
-          MYSQL_USER: testuser
-          MYSQL_PASSWORD: secret
-        ports:
-          - 3306:3306
-
-    outputs:
-      snap: ${{ steps.snapcraft.outputs.snap }}
-
+  cla-check:
+    permissions:
+      pull-requests: read
+    name: Canonical CLA signed
+    runs-on: ubuntu-20.04
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Check if CLA signed
+        uses: canonical/has-signed-canonical-cla@v1
 
-      - name: Build snap locally
-        uses: snapcore/action-build@v1
-        id: snapcraft
+  dco-check:
+    permissions:
+      pull-requests: read  # for tim-actions/get-pr-commits to get list of commits from the PR
+    name: Signed-off-by (DCO)
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Get PR Commits
+      id: 'get-pr-commits'
+      uses: tim-actions/get-pr-commits@master
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install snap and try
-        run: |
-          sudo snap install --dangerous ${{ steps.snapcraft.outputs.snap }}
-          sudo systemctl status snap.mysqld-exporter.mysqld-exporter
-          status=$?
+    - name: Check that all commits are signed-off
+      uses: tim-actions/dco@master
+      with:
+        commits: ${{ steps.get-pr-commits.outputs.commits }}
 
-      - name: Setup mysql
-        run: |
-          mysql --host 127.0.0.1 --port 3306 -uroot -ppassw0rd \
-            -e "CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'secret' WITH MAX_USER_CONNECTIONS 3;"
-          mysql --host 127.0.0.1 --port 3306 -uroot -ppassw0rd \
-            -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'testuser'@'localhost';"
-
-      # Configure the snap services to use the proper mysql username and password
-      - name: Configure snap services
-        run: |
-          echo "Configuring mysqld-exporter to use the proper user/pass"
-          sudo snap set mysqld-exporter mysql.user=testuser mysql.password=secret
-          sudo snap restart mysqld-exporter
-
-      # Check that metrics are exported. This is done with a very basic check of seeing if the
-      # mysql_up metric is indeed 1.
-      - name: Check metrics exported
-        run: |
-          CURL_OPTS=(--max-time 20 --retry 5 --retry-delay 3 --retry-connrefused -s)
-          UP=$(curl ${CURL_OPTS[@]} http://localhost:9104/metrics | awk '/^mysql_up/ { print $2 }')
-          if [ "$UP" == "1" ]
-          then
-              echo "Metric check succeeded."
-          else
-              echo "Metric check failed. UP = '$UP'"
-              sudo snap logs mysqld-exporter
-              cat /var/snap/mysqld-exporter/current/my.cnf
-              sudo snap get mysqld-exporter mysql
-              exit 1
-          fi
+  build-and-test:
+    uses: ./.github/workflows/build-and-test.yaml

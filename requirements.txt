@@ -1,0 +1,3 @@
+# for interacting with snap
+git+https://github.com/albertodonato/snap-helpers#egg=snap-helpers
+jinja2

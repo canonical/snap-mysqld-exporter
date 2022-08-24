@@ -64,15 +64,11 @@ class MysqldExporterService:
         for key, value in config.items():
             group = key.replace("-", "_")
 
-            # If the value is Truthy, then we don't want to pass this as a
+            # If the value is True, then we don't want to pass this as a
             # parameter onto the commandline.
             if value is True:
                 continue
 
-            # if prefix != "--no-":
-            #     prefix = ".".join([prefix, group])
-            # else:
-            #     prefix = "".join([prefix, group])
             # Recursively find the set of configuration options
             if isinstance(value, Mapping):
                 args.extend(self._keys_to_args(value, f"{prefix}{group}."))

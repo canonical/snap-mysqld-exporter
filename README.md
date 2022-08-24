@@ -39,6 +39,25 @@ can be set via the `snap set` command:
 * __mysql.user__ - the username to use when connecting to mysql, defaults to exporter
 * __mysql.password__ - the password to use when connecting to mysql
 
+By default, the exporter will collect all metrics from MySQL that are relevant
+*except* the metrics that require `userstat=1`. Metrics that are collected can
+be disabled by setting the `collect.<group>.<metric>` key to False using the snap
+cli. Setting these values to False will cause the exporter to start with the
+`--no-collect.<group>.<metric>` flag set.
+
+    Note: configuration keys in the snap use a hyphen ('-') instead of an underscore ('_')
+    for configuration keys. The hyphen is converted into an underscore when the exporter
+    is started.
+
+These metrics are turned off by
+default and the operator must expressly opt in to collecting these stats by setting
+the userstat settings to True. These settings are:
+
+* `collect.info-schema.clientstats`
+* `collect.info-schema.tablestats`
+* `collect.info-schema.schemastats`
+* `collect.info-schema.userstats`
+
 # Build
 
 ```bash
@@ -53,12 +72,3 @@ To try the snap that was built, you can install it locally:
 ```
 $ sudo snap install --devmode ./mysqld-prometheus-exporter_x86_64.snap
 ```
-
-
-# TODO Items
-
-[x] Provide a sample my.cnf file in the $SNAP_COMMON directory
-
-[ ] Config flags for the daemon
-
-[x] Script wrapper to turn snap config settings into flags for the daemon

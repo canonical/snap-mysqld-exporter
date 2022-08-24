@@ -11,7 +11,7 @@ confinement: strict
 
 apps:
   mysqld-exporter:
-    command: 'bin/mysqld-exporter.wrapper'
+    command: 'bin/mysqld-exporter-service'
     daemon: simple
     plugs:
       - network
@@ -29,22 +29,12 @@ parts:
       snapcraftctl pull
       snapcraftctl set-version "$(git describe)"
 
-  mycnf:
+  snap-hooks:
     source: .
-    plugin: dump
-    organize:
-      my.cnf: etc/prometheus/my.cnf
-    prime:
-      - etc/prometheus/my.cnf
+    plugin: python
 
-  wrappers:
-    source: .
+  templates:
+    source: templates/
     plugin: dump
     organize:
-      wrappers/: bin/
-
-  scripts:
-    source: .
-    plugin: dump
-    organize:
-      scripts/: bin/
+      '*': templates/

@@ -1,3 +1,3 @@
 # for interacting with snap
-git+https://github.com/albertodonato/snap-helpers#egg=snap-helpers
+snap-helpers < 4.0
 jinja2

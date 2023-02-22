@@ -32,6 +32,13 @@ parts:
   snap-hooks:
     source: .
     plugin: python
+    build-packages:
+      - git
+    python-requirements:
+      - requirements.txt
+    override-build: |
+      craftctl default
+      snap-helpers write-hooks
 
   templates:
     source: templates/

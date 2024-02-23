@@ -1,4 +1,5 @@
 # Mysqld Exporter Snap
+[![Push (main)](https://github.com/canonical/snap-mysqld-exporter/actions/workflows/main.yaml/badge.svg)](https://github.com/canonical/snap-mysqld-exporter/actions/workflows/main.yaml)
 
 This repository contains the source for an unofficial snap for the
 [mysqld exporter](https://github.com/prometheus/mysqld_exporter) for
